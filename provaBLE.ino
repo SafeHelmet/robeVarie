@@ -7,8 +7,10 @@ const char *deviceServiceResponseCharacteristicUuid = "f47ac10b-58cc-4372-a567-0
 
 // BLE Service and Characteristics
 BLEService ledService(deviceServiceUuid);
-BLEStringCharacteristic ledRequestCharacteristic(deviceServiceRequestCharacteristicUuid, BLEWrite, 4);
+BLEStringCharacteristic ledRequestCharacteristic(deviceServiceRequestCharacteristicUuid, BLEWrite | BLERead, 4);
 BLEStringCharacteristic ledResponseCharacteristic(deviceServiceResponseCharacteristicUuid, BLENotify, 4);
+
+BLEDescriptor cccdDescriptor("f47ac10b-58cc-4372-a567-0e02b2c3d482", "");
 
 void setup() {
   Serial.begin(9600);
@@ -27,6 +29,7 @@ void setup() {
   BLE.setAdvertisedService(ledService);
   ledService.addCharacteristic(ledRequestCharacteristic);
   ledService.addCharacteristic(ledResponseCharacteristic);
+  ledResponseCharacteristic.addDescriptor(cccdDescriptor);
   BLE.addService(ledService);
 
   // Initialize response characteristic
@@ -50,9 +53,11 @@ void loop() {
         if (value == "ON") {
           digitalWrite(LED_BUILTIN, HIGH);
           Serial.println("LED turned ON");
+          ledResponseCharacteristic.writeValue("1");
         } else if (value == "OFF") {
           digitalWrite(LED_BUILTIN, LOW);
           Serial.println("LED turned OFF");
+          ledResponseCharacteristic.writeValue("0");
         }
         delay(20);
       }
